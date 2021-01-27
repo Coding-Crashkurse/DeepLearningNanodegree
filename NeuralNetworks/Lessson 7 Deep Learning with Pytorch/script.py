@@ -128,6 +128,8 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
+from torch import optim
+
 
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
 trainset = datasets.MNIST("MNIST_data/", download=True, train=True, transform=transform)
@@ -142,27 +144,46 @@ model = nn.Sequential(nn.Linear(784, 128),
                       nn.LogSoftmax(dim=1))    
         
 criterion = nn.NLLLoss()
+optimizer = optim.SGD(model.parameters(), lr=0.04)
 
+epochs = 10
+for e in range(epochs):
+    running_loss = 0
+    for images, labels in trainloader:
+        images = images.view(images.shape[0], -1)
+        
+        optimizer.zero_grad()
+        output = model.forward(images)
+        loss = criterion(output, labels)
+        loss.backward()
+        optimizer.step()
+        
+        running_loss += loss.item()
+    else:
+        print(f'Training loss: {running_loss/len(trainloader)}')
+
+# Create prediction
 images, labels = next(iter(trainloader))
-images = images.view(images.shape[0], -1)
 
-logps = model(images)
-loss = criterion(logps, labels)
+img = images[0].view(1, 784)
 
-print(loss)
+with torch.no_grad():
+    logits = model.forward(img)
+    
+ps = F.softmax(logits, dim=1)
 
-model[0].weight.grad # None
-loss.backward()
-model[0].weight.grad      
-        
+import seaborn as sns
+import numpy as np
+import pandas as pd
 
-from torch import optim
+ps_num = ps.numpy().flatten()
 
-optimizer = optim.SGD(model.parameters(), lr=0.01)
 
-        
-        
-        
+pd.Series(ps_num)
+
+result = pd.concat([pd.Series(ps_num), pd.Series(np.arange(0, 10))], axis=1).rename(columns={0: "prediction", 1: "values"})
+
+sns.barplot(data=result, y="prediction", x="values")       
         
         
         
