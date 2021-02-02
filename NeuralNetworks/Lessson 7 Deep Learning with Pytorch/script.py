@@ -146,7 +146,7 @@ model = nn.Sequential(nn.Linear(784, 128),
 criterion = nn.NLLLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.04)
 
-epochs = 10
+epochs = 40
 for e in range(epochs):
     running_loss = 0
     for images, labels in trainloader:
@@ -162,10 +162,30 @@ for e in range(epochs):
     else:
         print(f'Training loss: {running_loss/len(trainloader)}')
 
+torch.save(model.state_dict(), "C:/Users/User/Desktop/Canvas/model.pth")
+
+model.load_state_dict(torch.load("C:/Users/User/Desktop/Canvas/model.pth"))
+model.eval()
+
+
 # Create prediction
 images, labels = next(iter(trainloader))
+images[0].squeeze().shape
+
+images[0].view(784).shape
+
+T = images[0]
+T = T.unsqueeze(0)
+T = torch.nn.functional.interpolate(T,size=(14,14), mode='bilinear')
+T = T.squeeze(0)
+T.size()
+
+plt.imshow(images[0].numpy().squeeze(), cmap="Greys_r")
+
+F.interpolate(images[0], (1, 14, 14))
 
 img = images[0].view(1, 784)
+img
 
 with torch.no_grad():
     logits = model.forward(img)
@@ -176,25 +196,31 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 
+
 ps_num = ps.numpy().flatten()
-
-
-pd.Series(ps_num)
-
 result = pd.concat([pd.Series(ps_num), pd.Series(np.arange(0, 10))], axis=1).rename(columns={0: "prediction", 1: "values"})
 
 sns.barplot(data=result, y="prediction", x="values")       
         
+
+def convert_scale(arr):
+    result = (-1 + 2 * ((arr) - np.min(arr)) / (np.max(arr) - np.min(arr)))
+    return(result)
+    
+convert_scale(np.array([0, 0, 0, 255, 255, 255]))
+
+output = np.array([0, 0, 0, 255, 255, 255])
+result = (-1 + 2 * ((output) - 0) / (255 - 0)) * -1;
+result
+
+desired = np.array([1, 1, 1, -1, -1, -1, 1, 1, 1])
+
+
+x = torch.from_numpy(desired)
+x.reshape((1, 3, 3)).shape
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+np.array([1,2,3,4,5]).argmax()
+np.array([1,2,3,4,5]).max()
+
     
